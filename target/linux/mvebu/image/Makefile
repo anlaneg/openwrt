@@ -87,7 +87,9 @@ define Device/Default
   KERNEL_NAME := zImage
   KERNEL := kernel-bin | append-dtb | uImage none
   SUPPORTED_DEVICES = $$(DEVICE_DTS)
+  UBOOT :=
 endef
+DEVICE_VARS += UBOOT
 
 define Device/UBI
   IMAGES := sysupgrade.bin
@@ -123,5 +125,6 @@ endef
 
 include cortex-a9.mk
 include cortex-a53.mk
+include cortex-a72.mk
 
 $(eval $(call BuildImage))

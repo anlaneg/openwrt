@@ -132,7 +132,7 @@ define Device/asl26555-16M
   IMAGE_SIZE := 15872k
   SUPPORTED_DEVICES += asl26555
   DEVICE_TITLE := Alpha ASL26555 16M
-  DEVICE_PACKAGES :=
+  DEVICE_PACKAGES := kmod-usb-core kmod-usb-dwc2 kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += asl26555-16M
 
@@ -209,6 +209,22 @@ define Device/dap-1350
   DEVICE_TITLE := D-Link DAP-1350
 endef
 TARGET_DEVICES += dap-1350
+
+define Device/dcs-930
+  DTS := DCS-930
+  IMAGE_SIZE := $(ralink_default_fw_size_4M)
+  DEVICE_TITLE := D-Link DCS-930
+  DEVICE_PACKAGES := kmod-video-core kmod-video-uvc kmod-sound-core kmod-usb-audio kmod-usb-core kmod-usb-dwc2
+endef
+TARGET_DEVICES += dcs-930
+
+define Device/dcs-930l-b1
+  DTS := DCS-930L-B1
+  IMAGE_SIZE := $(ralink_default_fw_size_4M)
+  DEVICE_TITLE := D-Link DCS-930L B1
+  DEVICE_PACKAGES := kmod-video-core kmod-video-uvc kmod-sound-core kmod-usb-audio kmod-usb-core kmod-usb-ohci kmod-usb2
+endef
+TARGET_DEVICES += dcs-930l-b1
 
 define Device/dir-300-b1
   DTS := DIR-300-B1
@@ -302,10 +318,18 @@ TARGET_DEVICES += dir-620-d1
 
 define Device/dwr-512-b
   DTS := DWR-512-B
-  IMAGE_SIZE := 7700k
+  IMAGE_SIZE := 7800k
   DEVICE_TITLE := D-Link DWR-512 B
-  DEVICE_PACKAGES := kmod-usb2 kmod-spi-dev kmod-usb-serial kmod-usb-serial-option \
-			kmod-usb-net kmod-usb-net-cdc-ether comgt-ncm
+  DEVICE_PACKAGES := jboot-tools kmod-usb2 kmod-spi-dev kmod-usb-serial \
+			kmod-usb-serial-option kmod-usb-net kmod-usb-net-cdc-ether \
+			comgt-ncm
+  DLINK_ROM_ID := DLK6E2412001
+  DLINK_FAMILY_MEMBER := 0x6E24
+  DLINK_FIRMWARE_SIZE := 0x7E0000
+  KERNEL := $(KERNEL_DTB)
+  IMAGES += factory.bin
+  IMAGE/sysupgrade.bin := mkdlinkfw | pad-rootfs | append-metadata
+  IMAGE/factory.bin := mkdlinkfw | pad-rootfs | mkdlinkfw-factory
 endef
 TARGET_DEVICES += dwr-512-b
 
@@ -321,6 +345,7 @@ define Device/f5d8235-v2
   DTS := F5D8235_V2
   IMAGE_SIZE := 7744k
   DEVICE_TITLE := Belkin F5D8235 v2
+  DEVICE_PACKAGES := kmod-switch-rtl8366rb
 endef
 TARGET_DEVICES += f5d8235-v2
 
@@ -644,7 +669,7 @@ TARGET_DEVICES += rt-n10-plus
 define Device/rt-n13u
   DTS := RT-N13U
   DEVICE_TITLE := Asus RT-N13U
-  DEVICE_PACKAGES := kmod-leds-gpio kmod-rt2800-pci wpad-mini kmod-usb-dwc2
+  DEVICE_PACKAGES := kmod-leds-gpio kmod-rt2800-pci kmod-usb-dwc2
 endef
 TARGET_DEVICES += rt-n13u
 
@@ -893,3 +918,10 @@ define Device/kn
   DEVICE_PACKAGES := kmod-usb-core kmod-usb2 kmod-usb-ehci kmod-usb-ledtrig-usbport
 endef
 TARGET_DEVICES += kn
+
+define Device/zorlik_zl5900v2
+  DTS := ZL5900V2
+  DEVICE_TITLE := Zorlik ZL5900V2
+  DEVICE_PACKAGES := kmod-usb-core kmod-usb-ohci kmod-usb2 kmod-ledtrig-netdev
+endef
+TARGET_DEVICES += zorlik_zl5900v2

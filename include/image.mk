@@ -140,6 +140,7 @@ endef
 define Image/BuildKernel/MkFIT
 	$(TOPDIR)/scripts/mkits.sh \
 		-D $(1) -o $(KDIR)/fit-$(1).its -k $(2) $(if $(3),-d $(3)) -C $(4) -a $(5) -e $(6) \
+		-c $(if $(DEVICE_DTS_CONFIG),$(DEVICE_DTS_CONFIG),"config@1") \
 		-A $(LINUX_KARCH) -v $(LINUX_VERSION)
 	PATH=$(LINUX_DIR)/scripts/dtc:$(PATH) mkimage -f $(KDIR)/fit-$(1).its $(KDIR)/fit-$(1)$(7).itb
 endef
@@ -320,6 +321,7 @@ define Device/Init
   CMDLINE:=
 
   IMAGES :=
+  ARTIFACTS :=
   IMAGE_PREFIX := $(IMG_PREFIX)-$(1)
   IMAGE_NAME = $$(IMAGE_PREFIX)-$$(1)-$$(2)
   KERNEL_PREFIX = $$(IMAGE_PREFIX)
@@ -347,6 +349,7 @@ define Device/Init
   FS_OPTIONS/ubifs = $$(MKUBIFS_OPTS)
 
   DEVICE_DTS :=
+  DEVICE_DTS_CONFIG :=
   DEVICE_DTS_DIR :=
 
   BOARD_NAME :=
@@ -359,8 +362,8 @@ endef
 
 DEFAULT_DEVICE_VARS := \
   DEVICE_NAME KERNEL KERNEL_INITRAMFS KERNEL_SIZE KERNEL_INITRAMFS_IMAGE \
-  KERNEL_LOADADDR DEVICE_DTS DEVICE_DTS_DIR BOARD_NAME CMDLINE \
-  UBOOTENV_IN_UBI KERNEL_IN_UBI \
+  KERNEL_LOADADDR DEVICE_DTS DEVICE_DTS_CONFIG DEVICE_DTS_DIR BOARD_NAME \
+  CMDLINE UBOOTENV_IN_UBI KERNEL_IN_UBI \
   BLOCKSIZE PAGESIZE SUBPAGESIZE VID_HDR_OFFSET \
   UBINIZE_OPTS UIMAGE_NAME UBINIZE_PARTS \
   SUPPORTED_DEVICES IMAGE_METADATA
@@ -391,6 +394,7 @@ endef
 
 define Device/Check/Common
   _PROFILE_SET = $$(strip $$(foreach profile,$$(PROFILES) DEVICE_$(1),$$(call DEVICE_CHECK_PROFILE,$$(profile))))
+  DEVICE_PACKAGES += $$(call extra_packages,$$(DEVICE_PACKAGES))
   ifdef TARGET_PER_DEVICE_ROOTFS
     $$(eval $$(call merge_packages,_PACKAGES,$$(DEVICE_PACKAGES) $$(call DEVICE_EXTRA_PACKAGES,$(1))))
     ROOTFS_ID/$(1) := $$(if $$(_PROFILE_SET),$$(call mkfs_packages_id,$$(_PACKAGES)))
@@ -495,6 +499,19 @@ define Device/Build/image
 
 endef
 
+define Device/Build/artifact
+  $$(_TARGET): $(BIN_DIR)/$(IMAGE_PREFIX)-$(1)
+  $(KDIR)/tmp/$(IMAGE_PREFIX)-$(1): $$(KDIR_KERNEL_IMAGE)
+	@rm -f $$@
+	$$(call concat_cmd,$(ARTIFACT/$(1)))
+
+  .IGNORE: $(BIN_DIR)/$(IMAGE_PREFIX)-$(1)
+
+  $(BIN_DIR)/$(IMAGE_PREFIX)-$(1): $(KDIR)/tmp/$(IMAGE_PREFIX)-$(1)
+	cp $$^ $$@
+
+endef
+
 define Device/Build
   $(if $(CONFIG_TARGET_ROOTFS_INITRAMFS),$(call Device/Build/initramfs,$(1)))
   $(call Device/Build/kernel,$(1))
@@ -505,6 +522,10 @@ define Device/Build
   $$(eval $$(foreach image,$$(IMAGES), \
     $$(foreach fs,$$(filter $(TARGET_FILESYSTEMS),$$(FILESYSTEMS)), \
       $$(call Device/Build/image,$$(fs),$$(image),$(1)))))
+
+  $$(eval $$(foreach artifact,$$(ARTIFACTS), \
+    $$(call Device/Build/artifact,$$(artifact))))
+
 endef
 
 define Device/DumpInfo
